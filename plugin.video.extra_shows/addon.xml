@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<addon id="plugin.video.extra_shows"
+version="3.0.1"
+name="Plugin extra shows"
+provider-name="Roman_V_M/scott967">
+<requires>
+  <import addon="xbmc.python" version="3.0.1"/>
+</requires>
+<extension point="xbmc.python.pluginsource" library="main.py">
+  <provides>video</provides>
+</extension>
+<extension point="xbmc.addon.metadata">
+  <summary lang="en_GB">Kodi Video Plugin for extra tv shows not in library</summary>
+  <description lang="en_GB">video plugin for Kodi mediacenter.</description>
+  <disclaimer lang="en_GB"></disclaimer>
+  <license>GPL-3.0-only	</license>
+  <assets>
+    <icon>resources/images/icon.png</icon>
+    <fanart>resources/images/fanart.jpg</fanart>
+    <screenshot>resources/images/screenshot-1.jpg</screenshot>
+    <screenshot>resources/images/screenshot-2.jpg</screenshot>
+  </assets>
+  <news>Sample release</news>
+</extension>
+</addon>
