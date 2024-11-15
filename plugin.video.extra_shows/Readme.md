@@ -12,9 +12,10 @@ are beyond the scope of this example.
 The plugin uses a pre-defined set of public domain movies from  [publicdomainmovie.net](https://publicdomainmovie.net/).
 
 **Warning**: the "master" branch is only compatible with Kody 20.0 ("Nexus") and above that uses Python 3
-runtime for addons. For older versions see "matrix" and "python2" branches.
+runtime for addons. 
 
 ## Licenses:
 
 * Code: [GPL v.3](http://www.gnu.org/copyleft/gpl.html)
+* xmltodict: by Martin Blech [MIT](https://mit-license.org/)
 * Images: [Creative Commons Attribution-Share Alike 3.0](http://creativecommons.org/licenses/by-sa/3.0/us/). Genre images are borrowed from Kodi icon packs by Team-Kodi, Xzener and Gade.
