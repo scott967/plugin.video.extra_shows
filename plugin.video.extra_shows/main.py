@@ -1,4 +1,4 @@
-# Copyright (C) 2023, Roman V. M.
+# Copyright (C) 2023, Roman V. M. / 20224 Scott Smart
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -40,10 +40,10 @@ ADDON_PATH = Path(translatePath(Addon().getAddonInfo('path')))
 ADDON_NAME = Addon().getAddonInfo('name')
 VIDEO_FORMATS = ['.mkv', '.mp4', '.avi', '.wtv']
 
-# Public domain movies are from https://publicdomainmovie.net
-# Here we use a hardcoded list of movies simply for demonstrating purposes
-# In a "real life" plugin you will need to get info and links to video files/streams
-# from some website or online service.
+# SHOW_PATH is a source folder for tv shows.  TV Shows
+# should be in Kodi format with matching nfo files
+# Only video files with VIDEO_FORMATS are recognized:
+# not iso / dvd/bd folders, rar etc.
 
 def logit(msg:str):
     """utility Kodi logging
@@ -80,7 +80,6 @@ def parse_nfo(nfo_file:Path) -> dict:
         dict: contents of nfo file as dict
     """
     nfo_details = xmltodict.parse(nfo_file.read_text(encoding='utf-8'))
-    logit(f'parse_nfo  nfo details {nfo_details}')
     return nfo_details
 
 def parse_episode_name(filename:str) -> dict:
@@ -92,16 +91,12 @@ def parse_episode_name(filename:str) -> dict:
     Returns:
         dict: the episode as {'season': season_int, 'episode':episode_int}
     """
-    #logit(f'parse_episode_name from {filename}')
     episode = {}
     season_no = re.search(r'[sS](\d+)', filename)
-    #logit(f'parse_episode_name season match {season_no}')
     episode_no = re.search(r'[eE](\d+)', filename)
-    #logit(f'parse_episode_name episode match {episode_no}')
     if season_no and episode_no:
         episode['season'] = season_no.group(1)
         episode['episode'] = episode_no.group(1)
-    #logit(f'parse_episode_name episode S/E is {episode}')
     return episode
 
 def get_tvshow_nfo(show:Path) -> dict:
@@ -116,7 +111,6 @@ def get_tvshow_nfo(show:Path) -> dict:
     for show_file in show.iterdir():
         if show_file.name == 'tvshow.nfo':
             test_parse = parse_nfo(show_file)
-            #logit(f'get_tvshow_nfo results {test_parse}')
             return test_parse
 
 def get_episode_nfo(episodes_dir:Path) -> list[dict]:
@@ -131,9 +125,7 @@ def get_episode_nfo(episodes_dir:Path) -> list[dict]:
     logit(f'get_episode_nfo from {episodes_dir}')
     episode_list = []
     for episode_file in episodes_dir.iterdir():
-        #logit(f'get_episode_nfo file is {episode_file}')
         if episode_file.suffix == '.nfo':
-            logit(f'get_episode_nfo file is {episode_file.stem}')
             episode = parse_episode_name(episode_file.stem)
             if episode:
                 video = get_matching_video(episode_file)
@@ -169,7 +161,6 @@ def add_episode_data(infoTag:xbmc.InfoTagVideo, episode_info:dict) -> xbmc.InfoT
     Returns:
         (xbmc:InfoTagVieo): the updated videoinfotag
     """
-    logit(f'add_episode_data from {episode_info}')
     infoTag.setMediaType('episode')
     infoTag.setTitle(episode_info.get('title', ''))
     infoTag.setPlot(episode_info.get('plot', ''))
@@ -186,7 +177,6 @@ def get_url(**kwargs):
     :return: plugin call URL
     :rtype: str
     """
-    logit(f'get_url {URL}?{urllib.parse.urlencode(kwargs, quote_via=urllib.parse.quote)}')
     return f'{URL}?{urllib.parse.urlencode(kwargs, quote_via=urllib.parse.quote)}'
 
 def get_art(art_type:str, art_dir:Path) -> Path:
@@ -203,17 +193,11 @@ def get_art(art_type:str, art_dir:Path) -> Path:
         if file.stem == art_type and (file.suffix == '.jpg' or '.png'):
             return file
 
-def get_shows() ->list:
-    """
-    Get the list of videofiles/streams.
+def get_shows() ->list[dict]:
+    """gets a list of tv shows to display
 
-    Here you can insert some code that retrieves
-    the list of video streams in the given section from some site or API.
-
-    :param genre_index: genre index
-    :type genre_index: int
-    :return: the list of tv shows
-    :rtype: list
+    Returns:
+        list: the tv shows
     """
     shows = []
     for show in SHOW_PATH.iterdir():
@@ -227,23 +211,19 @@ def get_shows() ->list:
                     show_data['art'][art_type] = art
             show_data['dir'] = show
             shows.append(show_data)
-    logit(f'get_shows len is  {len(shows)}')
+    logit(f'get_shows total is {len(shows)}')
     return shows
 
-def get_episodes(show_dir:Path) ->list:
-    """
-    Get the list of videofiles/streams.
+def get_episodes(show_dir:Path) ->list[dict]:
+    """gets a list of tv shows to display
 
-    Here you can insert some code that retrieves
-    the list of video streams in the given section from some site or API.
+    Args:
+        show_dir (Path): the tv show folder containing episodes
 
-    :param genre_index: genre index
-    :type genre_index: int
-    :return: the list of tv shows
-    :rtype: list
+    Returns:
+        list: the episodes
     """
     episodes = get_episode_nfo(show_dir)
-    #logit(f'get_episodes {episodes}')
     return episodes
 
 def list_shows():
@@ -256,9 +236,7 @@ def list_shows():
     # Set plugin content. It allows Kodi to select appropriate views
     # for this type of content.
     xbmcplugin.setContent(HANDLE, 'tvshows')
-    # Get movie genres
     shows = get_shows()
-    # Iterate through genres
     for show_info in shows:
         # Create a list item with a text label.
         list_item = xbmcgui.ListItem(label=show_info['tvshow']['title'])
@@ -303,9 +281,6 @@ def list_episodes(show_path:Path, show_title:str):
         # Create a list item with a text label
         list_item = xbmcgui.ListItem(label=video['details']['episodedetails']['title'])
         # Set graphics (thumbnail, fanart, banner, poster, landscape etc.) for the list item.
-        # Here we use only poster for simplicity's sake.
-        # In a real-life plugin you may need to set multiple image types.
-        #list_item.setArt({'poster': video['poster']})
         # Set additional info for the list item via InfoTag.
         # 'mediatype' is needed for skin to display info for this ListItem correctly.
         info_tag:xbmc.InfoTagVideo = list_item.getVideoInfoTag()
